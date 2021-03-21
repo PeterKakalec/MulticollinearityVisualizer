@@ -93,13 +93,28 @@ server <- function(input, output) {
     #Placing X1 at the correct angle and distance from Y while maintaining its distance with X2
     x1x <- y$x-(((x1ydist/100)*rUnit)*sin(yAngle))
     x1y <- y$y-(((x1ydist/100)*rUnit)*cos(yAngle))
+    
+    #Fix to display x1 when its perfectly associated with y, and y's association with X2 is equal to X1 and X2's
+    if(distDat$yX1Dist==100 && distDat$yX2Dist == distDat$x1X2Dist){
+      x1x<-y$x
+      x1y<-y$y
+    }
     x1 <- data.frame("x" = x1x, "y" = x1y)
     
     #Placing X2 in a way which keeps it at a constant 90-degree angle from X1 (i.e. only horizontal movement)
     x2x <- x1$x + ((x1x2dist/100)*rUnit)
     x2y <- x1$y
-    x2 <- data.frame("x"=x2x,"y"=x2y)
     
+    #Fix to display circles in situations of perfect multicollinearity, when yx1 association = yx2 association
+    if(distDat$yX1Dist==distDat$yX2Dist && distDat$x1X2Dist==100){
+      x1x<-y$x
+      x1y<-y$y-(x1ydist/100)*rUnit
+      x1 <- data.frame("x" = x1x, "y" = x1y)
+      x2x<-y$x
+      x2y<-y$y-(x2ydist/100)*rUnit
+    }
+    x2 <- data.frame("x"=x2x,"y"=x2y)
+
     #Putting circle positions in a data frame and returning it
     df.venn <- data.frame(x = c(x1$x, x2$x, y$x),
                           y = c(x1$y, x2$y, y$y),
