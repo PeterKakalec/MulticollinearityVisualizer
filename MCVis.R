@@ -42,10 +42,7 @@ ui <- fluidPage(
                   max=100,
                   value=50,
                   step=1)
-      
-      
     ),
-    
     # Show a plot of the generated distribution
     mainPanel(
       plotOutput("distPlot")
