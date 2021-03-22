@@ -15,13 +15,8 @@ GenParams <- function(yX1Dist,yX2Dist,x1X2Dist){
   newDat <- data.frame(yX1Dist,yX2Dist,x1X2Dist)
   return(newDat)
 }
-# Define UI for application that draws a histogram
 ui <- fluidPage(
-  
-  # Application title
   titlePanel("Multicollinearity Demo"),
-  
-  # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
       sliderInput("yX1Dist",
@@ -43,14 +38,11 @@ ui <- fluidPage(
                   value=50,
                   step=1)
     ),
-    # Show a plot of the generated distribution
     mainPanel(
       plotOutput("distPlot")
     )
   )
 )
-
-# Define server logic required to draw a histogram
 server <- function(input, output) {
   params <- reactive ({
     GenParams(input$yX1Dist,input$yX2Dist,input$x1X2Dist)
