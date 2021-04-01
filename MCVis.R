@@ -1,12 +1,9 @@
-#
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
 #
 # Find out more about building applications with Shiny here:
 #
 #    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(ggplot2)
 library(ggforce)
@@ -15,6 +12,7 @@ GenParams <- function(yX1Dist,yX2Dist,x1X2Dist){
   newDat <- data.frame(yX1Dist,yX2Dist,x1X2Dist)
   return(newDat)
 }
+
 ui <- fluidPage(
   titlePanel("Multicollinearity Demo"),
   sidebarLayout(
@@ -43,12 +41,13 @@ ui <- fluidPage(
     )
   )
 )
-server <- function(input, output) {
+server <- function(input, output, session) {
   params <- reactive ({
     GenParams(input$yX1Dist,input$yX2Dist,input$x1X2Dist)
   })
+  
   makeCircles <- reactive({
-    #converts degrees to radians for rotating X2's position
+    #converts degrees to radians
     d2r <- 0.0174533
     
     #defining the radius for our circles
@@ -58,7 +57,7 @@ server <- function(input, output) {
     distDat<-params()
     
     #Constants to move our circles by the correct amount. Out of 200 because its it's a % distance of radius. (200% = distance of 2x radius = 0 overlap)
-    dists <- dists<-c(0,1.5,3.1,4.7,6.2,7.8,9.4,11,12.6,14.1,15.7,17.3,18.8,20.4,22,23.6,25.2,26.8,28.3,29.9,31.5,
+    dists<-c(0,1.5,3.1,4.7,6.2,7.8,9.4,11,12.6,14.1,15.7,17.3,18.8,20.4,22,23.6,25.2,26.8,28.3,29.9,31.5,
                       33.2,34.7,36.3,37.9,39.5,41.1,42.7,44.3,46,47.5,49.2,50.8,52.4,54.1,55.7,57.3,
                       59,60.6,62.3,63.9,65.6,67.3,68.9,70.6,72.3,74,75.7,77.3,79.1,80.8,82.5,84.2,
                       86,87.7,89.5,91.2,93,94.8,96.6,98.4,100.2,102,103.8,105.7,107.5,109.4,111.3,113.2,
@@ -78,6 +77,24 @@ server <- function(input, output) {
     #calculating y angle relative to X2's position at 90-degrees off of X1
     angleDat <- data.frame("x1x2"=(x1x2dist/100)*rUnit,"x1y"=(x1ydist/100)*rUnit,"x2y"=(x2ydist/100)*rUnit)
     yAngle <- (90*d2r)-acos(((angleDat$x1y^2)+(angleDat$x1x2^2)-(angleDat$x2y^2))/(2*(angleDat$x1y*angleDat$x1x2)))
+    
+    
+    #Figuring out which values of multicollinearity return a non-na value
+    mcRange<-NULL
+    for(i in 0:length(dists)){
+      cell=102-i
+      yAngle2 <- (90*d2r)-acos(((angleDat$x1y^2)+((dists[cell]/100)^2)-(angleDat$x2y^2))/(2*(angleDat$x1y*(dists[cell]/100))))
+      mcRange[i] <- is.na(yAngle2)
+    }
+    #Updating multicollinearity slider range based on above info
+    observe({
+      #If statement fixes for bug with perfect multicollinearity
+      if(x1ydist == x2ydist){
+        updateSliderInput(session,"x1X2Dist",max=max(which(mcRange==FALSE)),min=min(which(mcRange==FALSE)-1))
+      } else {
+        updateSliderInput(session,"x1X2Dist",max=max(which(mcRange==FALSE))-1,min=min(which(mcRange==FALSE)-1))
+      }
+    })
     
     #Placing X1 at the correct angle and distance from Y while maintaining its distance with X2
     x1x <- y$x-(((x1ydist/100)*rUnit)*sin(yAngle))
